@@ -1,0 +1,45 @@
+{
+  "title": "Rate Limiter",
+  "uid": "ratelimiter-v1",
+  "schemaVersion": 38,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1, "type": "timeseries", "gridPos": {"x":0,"y":0,"w":12,"h":8},
+      "title": "Requests/sec — allowed vs denied",
+      "targets": [
+        {"expr": "sum(rate(ratelimiter_requests_allowed_total[1m]))", "legendFormat": "allowed"},
+        {"expr": "sum(rate(ratelimiter_requests_denied_total[1m]))",  "legendFormat": "denied"}
+      ]
+    },
+    {
+      "id": 2, "type": "timeseries", "gridPos": {"x":12,"y":0,"w":12,"h":8},
+      "title": "Redis latency (µs) — p50 / p95 / p99",
+      "targets": [
+        {"expr": "histogram_quantile(0.50, rate(ratelimiter_redis_latency_microseconds_bucket[1m]))", "legendFormat": "p50"},
+        {"expr": "histogram_quantile(0.95, rate(ratelimiter_redis_latency_microseconds_bucket[1m]))", "legendFormat": "p95"},
+        {"expr": "histogram_quantile(0.99, rate(ratelimiter_redis_latency_microseconds_bucket[1m]))", "legendFormat": "p99"}
+      ]
+    },
+    {
+      "id": 3, "type": "timeseries", "gridPos": {"x":0,"y":8,"w":12,"h":8},
+      "title": "Denials by tier",
+      "targets": [
+        {"expr": "sum by(deny_tier)(rate(ratelimiter_requests_denied_total[1m]))", "legendFormat": "{{deny_tier}}"}
+      ]
+    },
+    {
+      "id": 4, "type": "stat", "gridPos": {"x":12,"y":8,"w":6,"h":4},
+      "title": "Redis errors (fail-open events)",
+      "targets": [{"expr": "increase(ratelimiter_redis_errors_total[5m])"}]
+    },
+    {
+      "id": 5, "type": "stat", "gridPos": {"x":18,"y":8,"w":6,"h":4},
+      "title": "Denial rate %",
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"]}},
+      "targets": [{
+        "expr": "100 * sum(rate(ratelimiter_requests_denied_total[1m])) / (sum(rate(ratelimiter_requests_allowed_total[1m])) + sum(rate(ratelimiter_requests_denied_total[1m])))"
+      }]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: ratelimiter
+    static_configs:
+      - targets:
+          - ratelimiter_1:8080
+          - ratelimiter_2:8080
+          - ratelimiter_3:8080
+    metrics_path: /metrics
