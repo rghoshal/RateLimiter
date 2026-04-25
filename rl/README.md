@@ -151,6 +151,28 @@ open http://localhost:9090
 
 ---
 
+## Standalone Docker Gateway
+
+This rate limiter is designed to run as a generic API Gateway or sidecar container in front of **any** backend application.
+
+### Building the Image
+```bash
+docker build -t ratelimiter -f docker/Dockerfile .
+```
+
+### Running the Gateway
+Simply set the `BACKEND_URL` environment variable to point to your target application. All traffic hitting the rate limiter will be transparently proxied and rate-limited.
+
+```bash
+docker run -p 8080:8080 \
+  -e REDIS_ADDR=redis:6379 \
+  -e BACKEND_URL=http://your-app:3000 \
+  -e LISTEN_ADDR=:8080 \
+  ratelimiter
+```
+
+---
+
 ## Configuration
 
 All config is in `internal/config/config.go`. Override via environment variables:

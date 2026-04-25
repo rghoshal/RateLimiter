@@ -13,22 +13,6 @@ services:
       timeout: 3s
       retries: 5
 
-  # ── Ecommerce Backend Service ──────────────────────────────────────────────
-  backend:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.backend
-    environment:
-      BACKEND_ADDR: ":9000"
-    expose:
-      - "9000"
-    ports:
-      - "9000:9000"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9000/healthz" ]
-      interval: 5s
-      timeout: 3s
-      retries: 3
 
   # ── Rate limiter (3 named replicas share the same image build) ─────────────
   ratelimiter_1:
@@ -39,11 +23,9 @@ services:
       INSTANCE_ID: rl-1
       REDIS_ADDR: redis:6379
       LISTEN_ADDR: ":8081"
-      BACKEND_URL: "http://backend:9000"
+      BACKEND_URL: "https://httpbin.org"
     depends_on:
       redis:
-        condition: service_healthy
-      backend:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "/server", "healthcheck" ]
@@ -59,11 +41,9 @@ services:
       INSTANCE_ID: rl-2
       REDIS_ADDR: redis:6379
       LISTEN_ADDR: ":8081"
-      BACKEND_URL: "http://backend:9000"
+      BACKEND_URL: "https://httpbin.org"
     depends_on:
       redis:
-        condition: service_healthy
-      backend:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "/server", "healthcheck" ]
@@ -79,11 +59,9 @@ services:
       INSTANCE_ID: rl-3
       REDIS_ADDR: redis:6379
       LISTEN_ADDR: ":8081"
-      BACKEND_URL: "http://backend:9000"
+      BACKEND_URL: "https://httpbin.org"
     depends_on:
       redis:
-        condition: service_healthy
-      backend:
         condition: service_healthy
     healthcheck:
       test: [ "CMD", "/server", "healthcheck" ]
@@ -96,14 +74,12 @@ services:
     image: nginx:alpine
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ../frontend:/usr/share/nginx/html:ro
     ports:
       - "8081:80"
     depends_on:
       - ratelimiter_1
       - ratelimiter_2
       - ratelimiter_3
-      - backend
 
   # ── Prometheus ─────────────────────────────────────────────────────────────
   prometheus:
